@@ -38,7 +38,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
 
-      - name: Build and Push Docker Image
+      - name: Build and Push ARM64 Docker Image
         uses: docker/build-push-action@v6.17.0
         with:
           context: .
@@ -53,4 +53,22 @@ jobs:
             im_policy=/etc/ImageMagick-6/policy.xml
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{inputs.version}}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{inputs.version}}-arm64
+
+
+      - name: Build and Push AMD64 Docker Image
+        uses: docker/build-push-action@v6.17.0
+        with:
+          context: .
+          platforms: linux/amd64
+          build-args: |
+            r3_version=${{inputs.version}}
+            r3_db_host=r3-db
+            r3_db_name=app
+            r3_db_user=app
+            r3_db_pass=app
+            r3_os_arch=x64
+            im_policy=/etc/ImageMagick-6/policy.xml
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{inputs.version}}-amd64
