@@ -2,11 +2,11 @@ name: Docker Image CI
 
 on:
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'app version'
-        type: string
-        required: true
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "0 3 * * 1"
 env:
   DOCKERFILE_PATH: Dockerfile  # Make Dockerfile path configurable
   # Use docker.io for Docker Hub if empty
@@ -36,7 +36,10 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
+      - name: Get latest version code
+        id: generate_versionno
+        run: |-
+          curl -fsSL "https://api.github.com/repos/r3-team/r3/tags" | jq -r '.[0].name | sub("v";"ver=";"i")' 
 
       - name: Build and Push ARM64 Docker Image
         uses: docker/build-push-action@v6.17.0
@@ -44,7 +47,7 @@ jobs:
           context: .
           platforms: linux/arm64
           build-args: |
-            r3_version=${{inputs.version}}
+            r3_version=${{ steps.generate_versionno.outputs.ver }}
             r3_db_host=r3-db
             r3_db_name=app
             r3_db_user=app
@@ -53,7 +56,7 @@ jobs:
             im_policy=/etc/ImageMagick-6/policy.xml
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{inputs.version}}-arm64
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.generate_versionno.outputs.ver }}-arm64
 
 
       - name: Build and Push AMD64 Docker Image
@@ -62,7 +65,7 @@ jobs:
           context: .
           platforms: linux/amd64
           build-args: |
-            r3_version=${{inputs.version}}
+            r3_version=${{ steps.generate_versionno.outputs.ver }}
             r3_db_host=r3-db
             r3_db_name=app
             r3_db_user=app
@@ -71,4 +74,4 @@ jobs:
             im_policy=/etc/ImageMagick-6/policy.xml
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{inputs.version}}-amd64
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.generate_versionno.outputs.ver }}-amd64
