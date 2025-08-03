@@ -39,7 +39,7 @@ jobs:
       - name: Get latest version code
         id: generate_versionno
         run: |-
-          curl -fsSL "https://api.github.com/repos/r3-team/r3/tags" | jq -r '.[0].name | sub("v";"ver=";"i")' 
+          curl -fsSL "https://api.github.com/repos/r3-team/r3/tags" | jq -r '.[0].name | sub("v";"ver=";"i")' >> $GITHUB_OUTPUT
 
       - name: Build and Push ARM64 Docker Image
         uses: docker/build-push-action@v6.17.0
